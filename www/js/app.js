@@ -1,23 +1,32 @@
 var elementNames = 'img,distance,title,neighborhood,address,tags'.split(',');
 var elements;
-var maxX = 0;
-var minX = 0;
+var range;
 var lastComparison = 0;
 var lastGet = 0;
-var threshold = 3;
+var threshold = 2;
 var G = 9.81;
 var loading = $('.loading');
+
+function resetRange() {
+    range = {
+        x: { max: 0, min: 0 },
+        y: { max: 0, min: 0 },
+        z: { max: 0, min: 0 }
+    };
+};
+
+resetRange();
 
 document.addEventListener('deviceready', onDeviceReady, false);
 
 function onDeviceReady() {
     getElements();
 
-    //elements.num.value = 3;
-
-    //elements.num.addEventListener('change', function() {
-    //    threshold = Number(elements.num.value) || 3;
-    //});
+    navigator.geolocation.getCurrentPosition(Location.updateLocation, alert, {
+        enableHighAccuracy: false,
+        timeout: 1000*60*10,
+        maximumAge: 1000*60*5
+    });
 
     var interval;
     setInterval(function () {
@@ -26,17 +35,16 @@ function onDeviceReady() {
 
         lastComparison += 100;
 
-        // Every 2 seconds
+        // Every second
         if (lastComparison % 1000 === 0) {
-            var diff = maxX - minX;
-            console.log('maxX:', maxX, 'minX:', minX);
-            if (diff > threshold*G) {
-                //message('SHAKEN!!! ' + diff + ' > ' + (threshold*G));
-                getNext();
-            } else {
-                //message('Not shaken; displacement: ' + diff + ' < ' + (threshold*G));
+            for (var key in range) {
+                var diff = range[key].max - range[key].min;
+                if (diff > threshold*G) {
+                    getNext();
+                    break;
+                }
             }
-            maxX = minX = 0;
+            resetRange();
         }
 
     }, 100);
@@ -46,7 +54,7 @@ function getNext() {
     if (lastComparison - lastGet > 2000) {
         lastGet = lastComparison;
         navigator.vibrate(500);
-        directory('club', attachInfo, alert);
+        Directory('club', attachInfo, alert);
     }
 }
 
@@ -61,8 +69,11 @@ function attachInfo(item) {
 }
 
 function gotAcceleration(e) {
-    maxX = Math.max(maxX, e.x);
-    minX = Math.min(minX, e.x);
+    Object.keys(range).forEach(function (key) {
+        var a = range[key];
+        a.max = Math.max(a.max, e[key]);
+        a.min = Math.min(a.max, e[key]);
+    });
     //'x,y,z,timestamp'.split(',').forEach(function(n) {
     //    elements[n].textContent = e[n].toFixed(2);
     //});

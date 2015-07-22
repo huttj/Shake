@@ -1,13 +1,15 @@
-var directory = (function () {
+var Directory = (function () {
 
-    var url  = 'http://www.yelp.com/search?find_desc=';
+    var baseUrl  = 'http://www.yelp.com/search?find_desc=';
     var term = '';
     var page = 0;
     var list = [];
     var loading = false;
 
     function search(newTerm, success, failure) {
-        if (term != newTerm) {
+        if (loading) {
+            failure('Loading!');
+        } else if (term != newTerm) {
             page = 0;
             term = newTerm;
             directory(success, failure);
@@ -20,14 +22,18 @@ var directory = (function () {
     }
 
     function directory(success, failure) {
-        if (loading) {
-            failure('Loading!');
-        }
 
         loading = true;
 
+        var url = baseUrl + term + '&start=' + page;
+
+        var lastAddress = Location.getLastAddress();
+        if (lastAddress) {
+            url += '&find_loc=' + lastAddress;
+        }
+
         $.ajax({
-            url: url + term + '&start=' + page,
+            url: url,
             type: 'GET',
             crossDomain: true,
             success: parseBody,
