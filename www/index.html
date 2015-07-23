@@ -36,7 +36,8 @@
         <title>Hello World</title>
     </head>
     <body>
-        <h1 class="loading">Loading...</h1>
+        <h1 class="loading hidden">Loading</h1>
+        <h1 class="shake">Shake me!</h1>
         <div class="app">
             <p id="title"></p>
             <p id="distance"></p>
@@ -44,11 +45,21 @@
             <p id="address"></p>
             <img id="img" />
             <p id="tags"></p>
+            <p>Your location:</p>
+            <p class="location">Unknown</p>
+            <select id="term" style="font-size: 40px;">
+                <option value="club">Club</option>
+                <option value="food">Food</option>
+                <option value="food">Fun</option>
+                <option value="yoga">Yoga</option>
+            </select>
         </div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="lib/jquery-2.1.4.js"></script>
+        <script type="text/javascript" src="js/compile.js"></script>
         <script type="text/javascript" src="js/location.js"></script>
         <script type="text/javascript" src="js/directory.js"></script>
+        <script type="text/javascript" src="js/shaker.js"></script>
         <script type="text/javascript" src="js/app.js"></script>
     </body>
 </html>

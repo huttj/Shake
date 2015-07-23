@@ -1,35 +1,34 @@
 var Location = (function (){
 
-    var re = /\{([^}]+)\}/g;
     var baseUrl = 'http://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}';
     var lastAddress;
 
-    function compile(str, map) {
-        return str.replace(re, replacer(map));
-    }
+    return {
+        updateLocation: updateLocation,
+        address: address
+    };
 
-    function replacer(map) {
-        return function (match, p1, offset, string) {
-            console.log(match, p1, offset, string);
-            return map[p1] || match;
-        }
-    }
-
-    function updateLocation(coords) {
+    function getAddress(coords, cb) {
         coords = coords.coords || coords;
-        return $.get(compile(baseUrl, coords)).then(function(address) {
+        $.get(compile(baseUrl, coords)).then(function(address) {
             lastAddress = address.display_name;
-            return address;
+            if (cb) cb(address);
         });
     }
 
-    function getLastAddress() {
+    function address() {
         return lastAddress;
     }
 
-    return {
-        updateLocation: updateLocation,
-        getLastAddress: getLastAddress
-    };
+    function updateLocation(cb) {
+        var opts = {
+            enableHighAccuracy: false,
+            timeout: 1000*60*10,
+            maximumAge: 1000*60*5
+        };
+        navigator.geolocation.getCurrentPosition(function (position) {
+            getAddress(position, cb);
+        }, alert, opts);
+    }
 
 })();

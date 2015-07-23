@@ -1,17 +1,21 @@
 var Directory = (function () {
 
-    var baseUrl  = 'http://www.yelp.com/search?find_desc=';
-    var term = '';
+    var baseUrl = 'http://www.yelp.com/search?find_desc=';
     var page = 0;
     var list = [];
     var loading = false;
+    var lastUrl = '';
 
-    function search(newTerm, success, failure) {
+    function search(term, address, success, failure) {
+        var url = baseUrl + term;
+        if (address) {
+            url += '&find_loc=' + address;
+        }
+
         if (loading) {
             failure('Loading!');
-        } else if (term != newTerm) {
-            page = 0;
-            term = newTerm;
+        } else if (lastUrl !== url) {
+            lastUrl = url;
             directory(success, failure);
         } else if (!list.length) {
             page += 10;
@@ -25,15 +29,8 @@ var Directory = (function () {
 
         loading = true;
 
-        var url = baseUrl + term + '&start=' + page;
-
-        var lastAddress = Location.getLastAddress();
-        if (lastAddress) {
-            url += '&find_loc=' + lastAddress;
-        }
-
         $.ajax({
-            url: url,
+            url: encodeURI(lastUrl + '&start=' + page),
             type: 'GET',
             crossDomain: true,
             success: parseBody,
@@ -43,7 +40,7 @@ var Directory = (function () {
         function parseBody(data) {
             try {
 
-                var html = data.split('<div class="yelp-ad-divider"></div>')[1].split(/<\/div>[^<]+<div class="map-tab flex-box">/)[0];
+                var html = data.match(/<ol>[\W\w]+<\/ol>/)[0];
 
                 var items = $(html);
 
@@ -53,12 +50,12 @@ var Directory = (function () {
                     var $n = $(n);
                     try {
                         var item = {
-                            img: $n.find('.photo-box img').attr('src'),
-                            distance: $n.find('.biz-attrs').children()[0].textContent.trim(),
-                            title: $n.find('.h-link').text().match(/\d+\.([\w\s]+)/)[1].trim(),
-                            neighborhood: $n.find('.neighborhood-str-list').text().trim(),
-                            address: $n.find('address').text().trim(),
-                            tags: $n.find('.category').text().trim() //.split(',')
+                            img          : $n.find('.photo-box img').attr('src'),
+                            distance     : $n.find('.biz-attrs').children()[0].textContent.trim(),
+                            title        : $n.find('.h-link').text().match(/\d+\.([\w\s]+)/)[1].trim(),
+                            neighborhood : $n.find('.neighborhood-str-list').text().trim(),
+                            address      : $n.find('address').text().trim(),
+                            tags         : $n.find('.category').text().trim() //.split(',')
                         };
                         l.push(item);
                     } catch (e) {
